@@ -1,0 +1,1 @@
+[![CI](https://github.com/altamirano146080/MLOps-Labs-1-to-3/actions/workflows/CI.yml/badge.svg)](https://github.com/altamirano146080/MLOps-Labs-1-to-3/actions/workflows/CI.yml)
