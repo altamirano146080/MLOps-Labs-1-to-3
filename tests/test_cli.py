@@ -153,3 +153,47 @@ def test_to_grayscale_rgb_cli(sample_image_path: Path, tmp_path: Path):
     )
     assert result.exit_code == 0
     assert out_path.is_file()
+
+
+def test_resize_default_output_cli(sample_image_path: Path):
+    """Tests resizing without --output creates the default <stem>_resized.jpg file."""
+    expected_out = sample_image_path.parent / "sample_resized.jpg"
+    runner = CliRunner()
+    try:
+        result = runner.invoke(cli, ["resize", str(sample_image_path), "32", "24"])
+        assert result.exit_code == 0
+        assert expected_out.is_file()
+    finally:
+        if expected_out.exists():
+            expected_out.unlink()
+
+
+def test_predict_empty_classes_cli(sample_image_path: Path):
+    """Tests that empty --classes prints an error message instead of crashing."""
+    runner = CliRunner()
+    result = runner.invoke(cli, ["predict", str(sample_image_path), "--classes", " , "])
+    assert result.exit_code == 0
+    assert "Error:" in result.output
+
+
+def test_preprocess_commands_invalid_params_cli(sample_image_path: Path):
+    """Tests error handling in CLI preprocessing commands for invalid parameters."""
+    runner = CliRunner()
+
+    res_contrast = runner.invoke(
+        cli, ["adjust-contrast", str(sample_image_path), "--factor", "0"]
+    )
+    assert res_contrast.exit_code == 0
+    assert "Error:" in res_contrast.output
+
+    res_brightness = runner.invoke(
+        cli, ["adjust-brightness", str(sample_image_path), "--factor", "-1"]
+    )
+    assert res_brightness.exit_code == 0
+    assert "Error:" in res_brightness.output
+
+    res_blur = runner.invoke(
+        cli, ["apply-gaussian-blur", str(sample_image_path), "--radius", "-2"]
+    )
+    assert res_blur.exit_code == 0
+    assert "Error:" in res_blur.output

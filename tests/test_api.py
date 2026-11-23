@@ -183,3 +183,23 @@ def test_preprocess_endpoint_invalid_factor(client, sample_jpeg_bytes):
         data={"method": "adjust-contrast", "factor": "0"},
     )
     assert response.status_code == 400
+
+
+def test_predict_endpoint_empty_file(client):
+    """Verify that an empty uploaded file is rejected with HTTP 400."""
+    response = client.post(
+        "/predict",
+        files={"file": ("empty.jpg", io.BytesIO(b""), "image/jpeg")},
+    )
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Uploaded file is empty"
+
+
+def test_preprocess_endpoint_invalid_radius(client, sample_jpeg_bytes):
+    """Verify that a negative blur radius returns HTTP 400."""
+    response = client.post(
+        "/preprocess",
+        files={"file": ("sample.jpg", io.BytesIO(sample_jpeg_bytes), "image/jpeg")},
+        data={"method": "apply-gaussian-blur", "radius": "-1.0"},
+    )
+    assert response.status_code == 400

@@ -118,3 +118,15 @@ def test_save_image(sample_image_path: Path, tmp_path: Path):
     out_file = tmp_path / "nested" / "out.png"
     saved_path = save_image(resized, out_file)
     assert saved_path.is_file()
+
+
+def test_load_invalid_type_raises():
+    """Tests that passing an unsupported object raises TypeError."""
+    with pytest.raises(TypeError):
+        predict(12345)  # type: ignore[arg-type]
+
+
+def test_normalize_orientation_missing_file_raises(tmp_path: Path):
+    """Tests that normalize_orientation raises FileNotFoundError for missing paths."""
+    with pytest.raises(FileNotFoundError):
+        normalize_orientation(tmp_path / "missing.jpg")
