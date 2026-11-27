@@ -3,6 +3,7 @@ Integration testing with the API
 """
 
 import io
+import runpy
 from PIL import Image
 import pytest
 from fastapi.testclient import TestClient
@@ -203,3 +204,15 @@ def test_preprocess_endpoint_invalid_radius(client, sample_jpeg_bytes):
         data={"method": "apply-gaussian-blur", "radius": "-1.0"},
     )
     assert response.status_code == 400
+
+
+def test_api_main_entrypoint(monkeypatch):
+    """Verify that running api.api as __main__ invokes uvicorn.run."""
+    called = {}
+
+    def fake_run(app_str, host, port, reload):
+        called["args"] = (app_str, host, port, reload)
+
+    monkeypatch.setattr("uvicorn.run", fake_run)
+    runpy.run_module("api.api", run_name="__main__")
+    assert called["args"] == ("api.api:app", "0.0.0.0", 8000, True)

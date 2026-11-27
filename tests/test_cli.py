@@ -3,6 +3,8 @@ Integration testing with the CLI
 """
 
 from pathlib import Path
+import runpy
+import sys
 from click.testing import CliRunner
 from PIL import Image
 import pytest
@@ -197,3 +199,27 @@ def test_preprocess_commands_invalid_params_cli(sample_image_path: Path):
     )
     assert res_blur.exit_code == 0
     assert "Error:" in res_blur.output
+
+
+@pytest.mark.parametrize(
+    "command",
+    ["normalize-orientation", "equalize-histogram", "to-grayscale-rgb"],
+)
+def test_preprocess_commands_invalid_image_cli(tmp_path: Path, command: str):
+    """Tests error handling in CLI preprocessing commands for invalid image files."""
+    bad_file = tmp_path / "not_an_image.jpg"
+    bad_file.write_bytes(b"not an image")
+    runner = CliRunner()
+    result = runner.invoke(cli, [command, str(bad_file)])
+    assert result.exit_code == 0
+    assert "Error:" in result.output
+
+
+def test_cli_main_entrypoint(monkeypatch, capsys):
+    """Verify that running cli.cli as __main__ invokes the Click CLI."""
+    monkeypatch.setattr(sys, "argv", ["cli", "--help"])
+    with pytest.raises(SystemExit) as exc_info:
+        runpy.run_module("cli.cli", run_name="__main__")
+    assert exc_info.value.code == 0
+    captured = capsys.readouterr()
+    assert "Show this message and exit." in captured.out
